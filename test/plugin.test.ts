@@ -1,5 +1,4 @@
-import { SplitPlugin, splitWithPlugin } from '../src';
-import { TextSegment } from '../types';
+import { TextSegment, SplitPlugin, splitWithPlugin } from '../src';
 
 type CustomRule = {
   rule: RegExp,

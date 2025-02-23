@@ -1,4 +1,16 @@
-import type { Rule, TextSegment, Plugin } from '../types/index'
+// 类型定义
+export interface TextSegment {
+  content: string
+  index: number // -1=未匹配，≥0=匹配的规则下标
+}
+
+export type Rule = string | RegExp
+
+export interface Plugin<T> {
+  get rules(): Rule[]
+  mapping: (segment: TextSegment) => T
+}
+
 // ================= 核心方法 =================
 /**
  * 单规则分割（基础单元）
@@ -120,8 +132,8 @@ abstract class SplitPlugin<T> implements Plugin<T> {
 }
 
 function splitWithPlugin <T> (text: string, plugin: Plugin<T>): T[] {
-  const rules = plugin.rules
-  return split(text, rules).map((segment) => plugin.mapping.bind(plugin)(segment))
+  const rules = (plugin as any).rules as Rule[]
+  return split(text, rules).map((segment) => (plugin as any).mapping.bind(plugin)(segment))
 }
 
 export {
