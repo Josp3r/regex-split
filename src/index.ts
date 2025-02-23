@@ -1,4 +1,4 @@
-import type { Rule, TextSegment } from '../types/index'
+import type { Rule, TextSegment, Plugin } from '../types/index'
 // ================= 核心方法 =================
 /**
  * 单规则分割（基础单元）
@@ -26,21 +26,21 @@ function splitText (
   }
 
   const segments: TextSegment[] = []
-  let lastPos = 0
-  const fragments: TextSegment[] = []
 
+  let lastPos = 0
   for (const match of matches) {
-    const start = match.index
-    const end = start + match.length
+    // ts error check
+    const start = match.index as any as number
+    const end = start + match[0].length
 
     if (start > lastPos) {
-      fragments.push({
+      segments.push({
         content: text.slice(lastPos, start),
         index: -1
       })
     }
 
-    fragments.push({
+    segments.push({
       content: match[0],
       index: index ?? 0
     })
@@ -49,7 +49,7 @@ function splitText (
   }
 
   if (lastPos < text.length) {
-    fragments.push({
+    segments.push({
       content: text.slice(lastPos),
       index: -1
     })
@@ -73,7 +73,6 @@ function splitSegements (
   // 终止条件：所有规则处理完成
   if (typeof currentIndex === 'undefined') currentIndex = 0
   if (currentIndex >= rules.length) return segments
-
   const currentRule = rules[currentIndex]
   const nextSegments: TextSegment[] = []
 
@@ -115,8 +114,20 @@ function split (text: string, rule: Rule | Rule[]): TextSegment[] {
   return splitSegements(segments, [rule])
 }
 
+abstract class SplitPlugin<T> implements Plugin<T> {
+  abstract get rules (): Rule[]
+  abstract mapping (segment: TextSegment): T
+}
+
+function splitWithPlugin <T> (text: string, plugin: Plugin<T>): T[] {
+  const rules = plugin.rules
+  return split(text, rules).map((segment) => plugin.mapping.bind(plugin)(segment))
+}
+
 export {
+  SplitPlugin,
   splitText,
   splitSegements,
+  splitWithPlugin,
   split as default
 }
