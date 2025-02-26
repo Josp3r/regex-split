@@ -37,9 +37,10 @@ function splitText (
   if (typeof rule === 'string') {
     regex = new RegExp(rule, 'g')
   } else {
-    regex = rule
-    if (!regex.flags.includes('g')) {
-      regex = new RegExp(regex.source, 'g' + regex.flags)
+    if (rule.flags.includes('g')) {
+      regex = rule
+    } else {
+      regex = new RegExp(rule.source, 'g' + rule.flags)
     }
   }
   const matches = Array.from(text.matchAll(regex))
