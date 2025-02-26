@@ -32,7 +32,16 @@ function splitText (
   if (text.length === 0 || rule === '') {
     return [fallbackSegment]
   }
-  const regex = new RegExp(rule, 'g') // 创建副本避免副作用
+  let regex: RegExp | null = null
+  // 如果是字符串，那么以其作为pattern，
+  if (typeof rule === 'string') {
+    regex = new RegExp(rule, 'g')
+  } else {
+    regex = rule
+    if (!regex.flags.includes('g')) {
+      regex = new RegExp(regex.source, 'g' + regex.flags)
+    }
+  }
   const matches = Array.from(text.matchAll(regex))
   if (matches.length === 0) {
     return [fallbackSegment]
