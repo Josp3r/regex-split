@@ -1,40 +1,9 @@
-import { TextSegment, SplitPlugin, splitWithPlugin } from '../src';
-
-type CustomRule = {
-  rule: RegExp,
-  desc: string,
-}
-type CustomSplitResult = {
-  content: string,
-  desc: string
-}
-class CustomPlugin extends SplitPlugin<CustomSplitResult> {
-  constructor(private list: CustomRule[]) {
-    super();
-  }
-
-  get rules() {
-    return this.list.map(item => item.rule);
-  }
-
-  mapping(segment: TextSegment): CustomSplitResult {
-    if (segment.index === -1) {
-      return {
-        content: segment.content,
-        desc: '未命中'
-      }
-    }
-    return {
-      content: segment.content,
-      desc: this.list[segment.index]!.desc
-    }
-  }
-}
+import { RuleOption, RuleOptionSplitPlugin, splitWithPlugin } from '../src';
 
 describe('插件测试', () => {
   it('测试分割插件', () => {
     const text = 'A1-B2;C3';
-    const ruleList: CustomRule[] = [
+    const ruleList: RuleOption[] = [
       {
         rule: /-/g,
         desc: '小短横'
@@ -49,8 +18,12 @@ describe('插件测试', () => {
       }
     ]
     
-    const segments = splitWithPlugin(text, new CustomPlugin(ruleList))
+    const segments = splitWithPlugin(text, new RuleOptionSplitPlugin(ruleList))
     // console.log(segments)
     expect(segments.length).toEqual(8);
+    expect(typeof segments[0].desc).toEqual('undefined');
+    expect(segments[2].desc).toEqual(ruleList[0].desc);
+    expect(segments[5].desc).toEqual(ruleList[1].desc);
+    expect(segments[7].desc).toEqual(ruleList[2].desc);
   });
 });

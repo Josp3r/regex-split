@@ -2,12 +2,13 @@
 export interface TextSegment {
   content: string
   index: number // -1=未匹配，≥0=匹配的规则下标
+  [key: string]: any
 }
 
 export type Rule = string | RegExp
 
-export interface Plugin<T> {
-  get rules(): Rule[]
+export interface Plugin<T = TextSegment> {
+  rules: Rule[]
   mapping: (segment: TextSegment) => T
 }
 
@@ -41,7 +42,7 @@ function splitText (
 
   let lastPos = 0
   for (const match of matches) {
-    // ts error check
+    // assetion for ts error: Object is possibly 'undefined'.
     const start = match.index as any as number
     const end = start + match[0].length
 
@@ -126,18 +127,44 @@ function split (text: string, rule: Rule | Rule[]): TextSegment[] {
   return splitSegements(segments, [rule])
 }
 
-abstract class SplitPlugin<T> implements Plugin<T> {
+abstract class SplitPlugin<T = TextSegment> implements Plugin<T> {
   abstract get rules (): Rule[]
   abstract mapping (segment: TextSegment): T
 }
 
+export interface RuleOption {
+  rule: RegExp
+  [key: string]: any
+}
+class RuleOptionSplitPlugin extends SplitPlugin {
+  constructor (private readonly list: RuleOption[]) {
+    super()
+  }
+
+  get rules (): RegExp[] {
+    return this.list.map(item => item.rule)
+  }
+
+  mapping (segment: TextSegment): TextSegment {
+    const s = {
+      ...segment
+    }
+    if (segment.index !== -1) {
+      Object.assign(s, this.list[segment.index])
+      delete s.rule
+    }
+    return s
+  }
+}
+
 function splitWithPlugin <T> (text: string, plugin: Plugin<T>): T[] {
-  const rules = (plugin as any).rules as Rule[]
-  return split(text, rules).map((segment) => (plugin as any).mapping.bind(plugin)(segment))
+  const rules = plugin.rules
+  return split(text, rules).map((segment) => plugin.mapping.bind(plugin)(segment))
 }
 
 export {
   SplitPlugin,
+  RuleOptionSplitPlugin,
   splitText,
   splitSegements,
   splitWithPlugin,
