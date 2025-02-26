@@ -2,7 +2,7 @@
   "name": "regex-split",
   "author": "Josper",
   "module": "dist/regex-split.esm.js",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
