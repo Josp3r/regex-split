@@ -143,7 +143,7 @@ abstract class SplitPlugin<T = TextSegment> implements Plugin<T> {
 }
 
 export interface RuleOption {
-  rule: RegExp
+  rule: SplitRule
   [key: string]: any
 }
 class RuleOptionSplitPlugin extends SplitPlugin {
@@ -151,7 +151,7 @@ class RuleOptionSplitPlugin extends SplitPlugin {
     super()
   }
 
-  get rules (): RegExp[] {
+  get rules (): SplitRule[] {
     return this.list.map(item => item.rule)
   }
 
