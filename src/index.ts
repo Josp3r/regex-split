@@ -4,14 +4,11 @@ export interface TextSegment {
   index: number // -1=未匹配，≥0=匹配的规则下标
   [key: string]: any
 }
-
-export type Rule = string | RegExp
-
+export type SplitRule = string | RegExp | ((text: string) => TextSegment[])
 export interface Plugin<T = TextSegment> {
-  rules: Rule[]
+  rules: SplitRule[]
   mapping: (segment: TextSegment) => T
 }
-
 // ================= 核心方法 =================
 /**
  * 单规则分割（基础单元）
@@ -22,7 +19,7 @@ export interface Plugin<T = TextSegment> {
  */
 function splitText (
   text: string,
-  rule: Rule,
+  rule: SplitRule,
   index?: number // 默认为0
 ): TextSegment[] {
   const fallbackSegment: TextSegment = {
@@ -31,6 +28,9 @@ function splitText (
   }
   if (text.length === 0 || rule === '') {
     return [fallbackSegment]
+  }
+  if (typeof rule === 'function') {
+    return rule(text)
   }
   let regex: RegExp | null = null
   // 如果是字符串，那么以其作为pattern，
@@ -90,7 +90,7 @@ function splitText (
  */
 function splitSegements (
   segments: TextSegment[],
-  rules: Rule[],
+  rules: SplitRule[],
   currentIndex?: number
 ): TextSegment[] {
   // 终止条件：所有规则处理完成
@@ -113,7 +113,7 @@ function splitSegements (
   return splitSegements(nextSegments, rules, currentIndex + 1)
 }
 
-function split (text: string, rule: Rule | Rule[]): TextSegment[] {
+function split (text: string, rule: SplitRule | SplitRule[]): TextSegment[] {
   if (typeof text !== 'string') {
     throw new Error('The text must be a string')
   }
@@ -138,7 +138,7 @@ function split (text: string, rule: Rule | Rule[]): TextSegment[] {
 }
 
 abstract class SplitPlugin<T = TextSegment> implements Plugin<T> {
-  abstract get rules (): Rule[]
+  abstract get rules (): SplitRule[]
   abstract mapping (segment: TextSegment): T
 }
 
